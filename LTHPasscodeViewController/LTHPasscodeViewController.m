@@ -1750,16 +1750,21 @@ options:NSNumericSearch] != NSOrderedAscending)
     CGAffineTransform transform = CGAffineTransformMakeRotation(angle);
     
     [self setIfNotEqualTransform: transform
-                           frame: self.view.window.bounds];
+                         forView: self.view];
+    
+    [self setIfNotEqualTransform: transform
+                         forView: _coverView];
 }
 
 
-- (void)setIfNotEqualTransform:(CGAffineTransform)transform frame:(CGRect)frame {
-    if(!CGAffineTransformEqualToTransform(self.view.transform, transform)) {
-        self.view.transform = transform;
+- (void)setIfNotEqualTransform:(CGAffineTransform)transform forView:(UIView*)view {
+    CGRect frame = view.window.bounds;
+    
+    if(!CGAffineTransformEqualToTransform(view.transform, transform)) {
+        view.transform = transform;
     }
-    if(!CGRectEqualToRect(self.view.frame, frame)) {
-        self.view.frame = frame;
+    if(!CGRectEqualToRect(view.frame, frame)) {
+        view.frame = frame;
     }
 }
 
