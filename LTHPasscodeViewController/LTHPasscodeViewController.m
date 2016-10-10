@@ -291,6 +291,18 @@ options:NSNumericSearch] != NSOrderedAscending)
                                               error:nil];
 }
 
+- (BOOL)_needToShowHideLockWindow {
+    return self.defaultLockWindow != nil;
+}
+
+- (UIWindow*) _lockWindow {
+    if (self.defaultLockWindow != nil) {
+        return self.defaultLockWindow;
+    }
+    
+    return LTHMainWindow;
+}
+
 #if !(TARGET_IPHONE_SIMULATOR)
 - (void)_handleTouchIDFailureAndDisableTouchID:(BOOL)disableTouchID {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -513,6 +525,10 @@ options:NSNumericSearch] != NSOrderedAscending)
                     self.view.center = CGPointMake(self.view.center.x, self.view.center.y * 2.f);
                 }
             }
+            
+            if ([self _needToShowHideLockWindow]) {
+                [self _lockWindow].hidden = YES;
+            }
         }
         else {
             // Delete from Keychain
@@ -558,8 +574,8 @@ options:NSNumericSearch] != NSOrderedAscending)
 - (void)_setupNavBarWithLogoutTitle:(NSString *)logoutTitle {
     // Navigation Bar with custom UI
     self.navBar =
-    [[UINavigationBar alloc] initWithFrame:CGRectMake(0, LTHMainWindow.frame.origin.y,
-                                                      LTHMainWindow.frame.size.width, 64)];
+    [[UINavigationBar alloc] initWithFrame:CGRectMake(0, [self _lockWindow].frame.origin.y,
+                                                      [self _lockWindow].frame.size.width, 64)];
     self.navBar.tintColor = self.navigationTintColor;
     if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
         self.navBar.barTintColor = self.navigationBarTintColor;
@@ -584,7 +600,7 @@ options:NSNumericSearch] != NSOrderedAscending)
     item.hidesBackButton = YES;
     
     [self.navBar pushNavigationItem:item animated:NO];
-    [LTHMainWindow addSubview:self.navBar];
+    [[self _lockWindow] addSubview:self.navBar];
 }
 
 - (void)_setupViews {
@@ -939,8 +955,12 @@ options:NSNumericSearch] != NSOrderedAscending)
     
     // In case the user leaves the app while the lockscreen is already active.
     if (!_isCurrentlyOnScreen) {
-        [LTHMainWindow addSubview: self.view];
-        //		[LTHMainWindow.rootViewController addChildViewController: self];
+        if ([self _needToShowHideLockWindow]) {
+            [self _lockWindow].hidden = NO;
+            [[self _lockWindow] makeKeyAndVisible];
+        }
+        [[self _lockWindow] addSubview: self.view];
+        //		[[self _lockWindow].rootViewController addChildViewController: self];
         
         // All this hassle because a view added to UIWindow does not rotate automatically
         // and if we would have added the view anywhere else, it wouldn't display properly
@@ -950,29 +970,29 @@ options:NSNumericSearch] != NSOrderedAscending)
         [self statusBarFrameOrOrientationChanged:nil];
         if (LTHiOS8) {
             self.view.center = CGPointMake(self.view.center.x, self.view.center.y * -1.f);
-            newCenter = CGPointMake(LTHMainWindow.center.x,
-                                    LTHMainWindow.center.y + self.navigationController.navigationBar.frame.size.height / 2);
+            newCenter = CGPointMake([self _lockWindow].center.x,
+                                    [self _lockWindow].center.y + self.navigationController.navigationBar.frame.size.height / 2);
         }
         else {
             if ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationLandscapeLeft) {
                 self.view.center = CGPointMake(self.view.center.x * -1.f, self.view.center.y);
-                newCenter = CGPointMake(LTHMainWindow.center.x - self.navigationController.navigationBar.frame.size.height / 2,
-                                        LTHMainWindow.center.y);
+                newCenter = CGPointMake([self _lockWindow].center.x - self.navigationController.navigationBar.frame.size.height / 2,
+                                        [self _lockWindow].center.y);
             }
             else if ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationLandscapeRight) {
                 self.view.center = CGPointMake(self.view.center.x * 2.f, self.view.center.y);
-                newCenter = CGPointMake(LTHMainWindow.center.x + self.navigationController.navigationBar.frame.size.height / 2,
-                                        LTHMainWindow.center.y);
+                newCenter = CGPointMake([self _lockWindow].center.x + self.navigationController.navigationBar.frame.size.height / 2,
+                                        [self _lockWindow].center.y);
             }
             else if ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) {
                 self.view.center = CGPointMake(self.view.center.x, self.view.center.y * -1.f);
-                newCenter = CGPointMake(LTHMainWindow.center.x,
-                                        LTHMainWindow.center.y - self.navigationController.navigationBar.frame.size.height / 2);
+                newCenter = CGPointMake([self _lockWindow].center.x,
+                                        [self _lockWindow].center.y - self.navigationController.navigationBar.frame.size.height / 2);
             }
             else {
                 self.view.center = CGPointMake(self.view.center.x, self.view.center.y * 2.f);
-                newCenter = CGPointMake(LTHMainWindow.center.x,
-                                        LTHMainWindow.center.y + self.navigationController.navigationBar.frame.size.height / 2);
+                newCenter = CGPointMake([self _lockWindow].center.x,
+                                        [self _lockWindow].center.y + self.navigationController.navigationBar.frame.size.height / 2);
             }
         }
         if (animated) {

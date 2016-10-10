@@ -92,6 +92,10 @@
  */
 @property (nonatomic, weak) id<LTHPasscodeViewControllerDelegate> delegate;
 /**
+ @brief Window to use for lock screen.
+ **/
+@property (nonatomic, strong) UIWindow* defaultLockWindow;
+/**
  @brief The gap between the passcode digits.
  */
 @property (nonatomic, assign) CGFloat   horizontalGap;
